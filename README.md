@@ -1,1 +1,1 @@
-# three-in-line-AI
+# Three in line AI
