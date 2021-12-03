@@ -66,11 +66,15 @@ def score(board, maximizingPlayer):
         return 0
 
 def possibleMoves(board, maximizingPlayer):
-    # get list for empty cells coordinates
-    # iterate over coordinate list:
-    #   place a token in coordinate element
-    #   store new board as part of the result
-    pass
+    maximizingPlayer = 1 if maximizingPlayer else 2
+    list_of_boards = []
+    for nothingY in board:
+        for nothingX in board:
+            if board[nothingY][nothingX] == 0:
+                board[nothingY][nothingX] = maximizingPlayer
+                list_of_boards.append(board[nothingY][nothingX])
+    return list_of_boards
+
 
 def alpha_beta(board, depth, alpha, beta, maximizingPlayer):
     if depth == 0 or isTerminal(board):
