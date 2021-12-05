@@ -10,40 +10,51 @@ def printBoard(board):
         print(board[N-i-1][N-1])
 
 def playerWin(board, player):
-    sentinel = True
     N = len(board)
-    # check column
-    for column in range(N):
-        for row in range(1, N):
-            if board[row][column] != board[row-1][column] or board[row][column] != player or board[row-1][column] != player:
-                sentinel = sentinel and False
-        if sentinel:
+    idealList = [player for _ in range(N)]
+    #Check row
+    for columnIndex in range(N):
+        helperList = []
+        for rowIndex in range(N):
+            helperList.append(board[columnIndex][rowIndex])
+        
+        if player == 1 and helperList == idealList:
             return True
-
-    # check row
-    for y in range(N):
-        for x in range(1, N):
-            if board[y][x] != board[y][x-1] or board[y][x] != player or board[y][x-1] != player:
-                sentinel = sentinel and False
-        if sentinel:
+        elif player == 2 and helperList == idealList:
             return True
-
-    # check diagonal. bottom to top, left to right
-    x, y = 1, 1
-    for s in range(N-1):
-        if board[y+s][x+s] != board[y-1+s][x-1+s] or board[y+s][x+s] != player or board[y-1+s][x-1+s] != player:
-            sentinel = sentinel and False
-    if sentinel:
+        else:
+            helperList = []
+    #Check column
+    for columnIndex in range(N):
+        helperList = []
+        for rowIndex in range(N):
+            helperList.append(board[rowIndex][columnIndex])
+        
+        if player == 1 and helperList == idealList:
+            return True
+        elif player == 2 and helperList == idealList:
+            return True
+        else:
+            helperList = []
+    #Check diagonal. Top to bottom. Left to right
+    helperList = []
+    indexList = []
+    for index in range(N):
+        helperList.append(board[index][index])
+        indexList.append(index)
+    if player == 1 and helperList == idealList:
         return True
-
-    # check diagonal. bottom to top, right to left
-    x, y = N-2, 1
-    for s in range(N-1):
-        if board[y+s][x-s] != board[y-1+s][x+1-s] or board[y+s][x-s] != player or board[y-1+s][x+1-s] != player:
-            sentinel = sentinel and False
-    if sentinel:
+    elif player == 2 and helperList == idealList:
         return True
-
+    #Check diagonal. Top to bottom. Right to left
+    helperList = []
+    indexListInverted = indexList[::-1]
+    for _ in indexList:
+        helperList.append(board[indexListInverted[_]][indexList[_]])
+    if player == 1 and helperList == idealList:
+        return True
+    elif player == 2 and helperList == idealList:
+        return True
     return False
 
 # Returns true when no more moves are possible. Either a player won or there is a draw (i.e. no empty cells).
