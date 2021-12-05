@@ -1,3 +1,5 @@
+def cloneBoard(board):
+    return [row[:] for row in board]
 
 def printBoard(board):
     # board is a list of lists
@@ -8,21 +10,25 @@ def printBoard(board):
         print(board[N-i-1][N-1])
 
 def playerWin(board, player):
+    sentinel = True
     N = len(board)
-    for x in range(N):
-        for y in range(1, N):
-            if board[y][x] != board[y-1][x] or board[y][x] != player or board[y-1][x] != player:
+    # check column
+    for column in range(N):
+        for row in range(1, N):
+            if board[row][column] != board[row-1][column] or board[row][column] != player or board[row-1][column] != player:
                 sentinel = sentinel and False
-    if sentinel:
-        return True
+        if sentinel:
+            return True
 
+    # check row
     for y in range(N):
         for x in range(1, N):
             if board[y][x] != board[y][x-1] or board[y][x] != player or board[y][x-1] != player:
                 sentinel = sentinel and False
-    if sentinel:
-        return True
+        if sentinel:
+            return True
 
+    # check diagonal. bottom to top, left to right
     x, y = 1, 1
     for s in range(N-1):
         if board[y+s][x+s] != board[y-1+s][x-1+s] or board[y+s][x+s] != player or board[y-1+s][x-1+s] != player:
@@ -30,9 +36,10 @@ def playerWin(board, player):
     if sentinel:
         return True
 
+    # check diagonal. bottom to top, right to left
     x, y = N-2, 1
     for s in range(N-1):
-        if board[y+s][x-s] != board[y+1+s][x+1-s] or board[y+s][x-s] != player or board[y+1+s][x+1-s] != player:
+        if board[y+s][x-s] != board[y-1+s][x+1-s] or board[y+s][x-s] != player or board[y-1+s][x+1-s] != player:
             sentinel = sentinel and False
     if sentinel:
         return True
@@ -48,8 +55,6 @@ def isTerminal(board):
     return playerWin(board, 1) or playerWin(board, 2)
 
 def score(board, maximizingPlayer):
-    sentinel = True
-    N = len(board)
     winPlayer1 = playerWin(board, 1)
     winPlayer2 = playerWin(board, 2)
     if maximizingPlayer == 1:
@@ -67,39 +72,84 @@ def score(board, maximizingPlayer):
 
 def possibleMoves(board, maximizingPlayer):
     maximizingPlayer = 1 if maximizingPlayer else 2
+    N = len(board)
     list_of_boards = []
-    for nothingY in board:
-        for nothingX in board:
+    for nothingY in range(N):
+        for nothingX in range(N):
             if board[nothingY][nothingX] == 0:
-                board[nothingY][nothingX] = maximizingPlayer
-                list_of_boards.append(board[nothingY][nothingX])
+                board2 = cloneBoard(board)
+                board2[nothingY][nothingX] = maximizingPlayer
+                list_of_boards.append(board2)
     return list_of_boards
 
+def boardDiff(board1, board2):
+    N = len(board1)
+    for y in range(N):
+        for x in range(N):
+            if board1[y][x] != board2[y][x]:
+                return y, x
+    # illegal position. Means boards are identical.
+    return -1, -1
 
-def alpha_beta(board, depth, alpha, beta, maximizingPlayer):
+def alpha_beta(board, depth, alpha, beta, row, column, maximizingPlayer):
     if depth == 0 or isTerminal(board):
-        return score(board, maximizingPlayer)
+        return score(board, maximizingPlayer), row, column
     if maximizingPlayer == 1:
-        value = -infinity
+        value = float('-inf')
         for child in possibleMoves(board, maximizingPlayer):
-            value = max(value, alpha_beta(child, depth-1, alpha, beta, False))
+            moveRow, moveColumn = boardDiff(board, child)
+            tmpValue, _, _ = alpha_beta(child, depth-1, alpha, beta, moveRow, moveColumn, False)
+            if tmpValue > value:
+                value = tmpValue
             if value >= beta:
                 break
-            alpha = max(alpha, value)
-        return value
+            if value > alpha:
+                alpha = value
+                row, column = moveRow, moveColumn
+        return value, row, column
     else:
-        value = infinity
+        value = float('inf')
         for child in possibleMoves(board, maximizingPlayer):
-            value = min(value, alpha_beta(child, depth-1, alpha, beta, True))
+            moveRow, moveColumn = boardDiff(board, child)
+            tmpValue, _, _ = alpha_beta(child, depth-1, alpha, beta, moveRow, moveColumn, True)
+            if tmpValue < value:
+                value = tmpValue
             if value <= alpha:
                 break
-            beta = min(beta, value)
-        return value
+            if value < beta:
+                beta = value
+                row, column = moveRow, moveColumn
+        return value, row, column
+
+def playerPositionQuery():
+    row = int(input("Choose row: "))
+    column = int(input("Choose column: "))
+    return row, column
 
 if __name__ == '__main__':
-    ## Board assumes 0 == empty, 1 == player 1, 2 == player 2
+    board = [[1, 0, 0], [1, 0, 0], [1, 0, 0]]
+    print(isTerminal(board))
+
+    ## Board assumes 0 == empty, 1 == human, 2 == AI
     print("Tic Tac Toe solver")
-    selfPlayer = int(input("Choose player # (1 or 2): "))
+    humanFirst = int(input("Choose who goes first # (1 or 2): "))
     width = int(input("Choose board width and/or height (defaults to 3):"))
     board = [[0 for _ in range(width)] for _ in range(width)]
-    #TODO: game flow with 2 players.
+    printBoard(board)
+    humanPlaying = humanFirst
+    while True:
+        if humanPlaying:
+            while True:
+                tokenRow, tokenColumn = playerPositionQuery()
+                if board[tokenRow][tokenColumn] == 0:
+                    break
+            board[tokenRow][tokenColumn] = 1
+        else:
+            # AI plays first
+            _, moveRow, moveColumn = alpha_beta(board, 10, float('-inf'), float('inf'), 0, 0, 2)
+            board[moveRow][moveColumn] = 2
+        humanPlaying = not humanPlaying
+        printBoard(board)
+        print()
+        if isTerminal(board):
+            break
