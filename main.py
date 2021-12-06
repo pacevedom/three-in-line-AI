@@ -11,49 +11,18 @@ def printBoard(board):
 
 def playerWin(board, player):
     N = len(board)
-    idealList = [player for _ in range(N)]
-    #Check row
-    for columnIndex in range(N):
-        helperList = []
-        for rowIndex in range(N):
-            helperList.append(board[columnIndex][rowIndex])
-        
-        if player == 1 and helperList == idealList:
+    # check rows
+    for row in board:
+        if len([element for element in row if element == player]) == N:
             return True
-        elif player == 2 and helperList == idealList:
+    # check columns
+    for column in range(N):
+        if len([1 for row in range(N) if board[row][column] == player]) == N:
             return True
-        else:
-            helperList = []
-    #Check column
-    for columnIndex in range(N):
-        helperList = []
-        for rowIndex in range(N):
-            helperList.append(board[rowIndex][columnIndex])
-        
-        if player == 1 and helperList == idealList:
-            return True
-        elif player == 2 and helperList == idealList:
-            return True
-        else:
-            helperList = []
-    #Check diagonal. Top to bottom. Left to right
-    helperList = []
-    indexList = []
-    for index in range(N):
-        helperList.append(board[index][index])
-        indexList.append(index)
-    if player == 1 and helperList == idealList:
+    # check diagonals
+    if len([i for i in range(N) if board[i][i] == player]) == N:
         return True
-    elif player == 2 and helperList == idealList:
-        return True
-    #Check diagonal. Top to bottom. Right to left
-    helperList = []
-    indexListInverted = indexList[::-1]
-    for _ in indexList:
-        helperList.append(board[indexListInverted[_]][indexList[_]])
-    if player == 1 and helperList == idealList:
-        return True
-    elif player == 2 and helperList == idealList:
+    if len([i for i in range(N) if board[i][N-i-1] == player]) == N:
         return True
     return False
 
@@ -65,31 +34,23 @@ def isTerminal(board):
         return True
     return playerWin(board, 1) or playerWin(board, 2)
 
-def score(board, maximizingPlayer):
+def score(board):
     winPlayer1 = playerWin(board, 1)
     winPlayer2 = playerWin(board, 2)
-    if maximizingPlayer == 1:
-        if winPlayer1:
-            return 1
-        elif winPlayer2:
-            return -1
-        return 0
-    else:
-        if winPlayer2:
-            return 1
-        elif winPlayer1:
-            return -1
-        return 0
+    if winPlayer2:
+        return 1
+    elif winPlayer1:
+        return -1
+    return 0
 
-def possibleMoves(board, maximizingPlayer):
-    maximizingPlayer = 1 if maximizingPlayer else 2
+def possibleMoves(board, player):
     N = len(board)
     list_of_boards = []
     for nothingY in range(N):
         for nothingX in range(N):
             if board[nothingY][nothingX] == 0:
                 board2 = cloneBoard(board)
-                board2[nothingY][nothingX] = maximizingPlayer
+                board2[nothingY][nothingX] = player
                 list_of_boards.append(board2)
     return list_of_boards
 
@@ -104,12 +65,12 @@ def boardDiff(board1, board2):
 
 def alpha_beta(board, depth, alpha, beta, row, column, maximizingPlayer):
     if depth == 0 or isTerminal(board):
-        return score(board, maximizingPlayer), row, column
-    if maximizingPlayer == 1:
+        return score(board), row, column
+    if maximizingPlayer == 2:
         value = float('-inf')
         for child in possibleMoves(board, maximizingPlayer):
             moveRow, moveColumn = boardDiff(board, child)
-            tmpValue, _, _ = alpha_beta(child, depth-1, alpha, beta, moveRow, moveColumn, False)
+            tmpValue, _, _ = alpha_beta(child, depth-1, alpha, beta, moveRow, moveColumn, 1)
             if tmpValue > value:
                 value = tmpValue
             if value >= beta:
@@ -122,7 +83,7 @@ def alpha_beta(board, depth, alpha, beta, row, column, maximizingPlayer):
         value = float('inf')
         for child in possibleMoves(board, maximizingPlayer):
             moveRow, moveColumn = boardDiff(board, child)
-            tmpValue, _, _ = alpha_beta(child, depth-1, alpha, beta, moveRow, moveColumn, True)
+            tmpValue, _, _ = alpha_beta(child, depth-1, alpha, beta, moveRow, moveColumn, 2)
             if tmpValue < value:
                 value = tmpValue
             if value <= alpha:
@@ -138,15 +99,13 @@ def playerPositionQuery():
     return row, column
 
 if __name__ == '__main__':
-    board = [[1, 0, 0], [1, 0, 0], [1, 0, 0]]
-    print(isTerminal(board))
-
     ## Board assumes 0 == empty, 1 == human, 2 == AI
     print("Tic Tac Toe solver")
-    humanFirst = int(input("Choose who goes first # (1 or 2): "))
+    humanFirst = int(input("Choose who goes first # (1 or 2): ")) == 1
     width = int(input("Choose board width and/or height (defaults to 3):"))
     board = [[0 for _ in range(width)] for _ in range(width)]
     printBoard(board)
+    print()
     humanPlaying = humanFirst
     while True:
         if humanPlaying:
@@ -156,8 +115,7 @@ if __name__ == '__main__':
                     break
             board[tokenRow][tokenColumn] = 1
         else:
-            # AI plays first
-            _, moveRow, moveColumn = alpha_beta(board, 10, float('-inf'), float('inf'), 0, 0, 2)
+            _, moveRow, moveColumn = alpha_beta(board, width * width, float('-inf'), float('inf'), 0, 0, 2)
             board[moveRow][moveColumn] = 2
         humanPlaying = not humanPlaying
         printBoard(board)
