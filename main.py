@@ -81,7 +81,7 @@ def alpha_beta(board, depth, alpha, beta, row, column, maximizingPlayer):
             moveRow, moveColumn = boardDiff(board, child)
             tmpValue, _, _ = alpha_beta(child, depth-1, alpha, beta, moveRow, moveColumn, 1)
             if tmpValue > value:
-                value = tmpValue - (50 - depth)
+                value = tmpValue
             if value >= beta:
                 break
             if value > alpha:
@@ -94,7 +94,7 @@ def alpha_beta(board, depth, alpha, beta, row, column, maximizingPlayer):
             moveRow, moveColumn = boardDiff(board, child)
             tmpValue, _, _ = alpha_beta(child, depth-1, alpha, beta, moveRow, moveColumn, 2)
             if tmpValue < value:
-                value = tmpValue - (50 - depth)
+                value = tmpValue
             if value <= alpha:
                 break
             if value < beta:
