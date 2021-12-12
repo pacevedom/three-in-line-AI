@@ -43,13 +43,13 @@ def isTerminal(board):
         return True
     return playerWin(board, 1) or playerWin(board, 2)
 
-def score(board):
+def score(board, depth):
     winPlayer1 = playerWin(board, 1)
     winPlayer2 = playerWin(board, 2)
     if winPlayer2:
-        return 1
+        return 100 - depth
     elif winPlayer1:
-        return -1
+        return -100 + depth
     return 0
 
 def possibleMoves(board, player):
@@ -74,7 +74,7 @@ def boardDiff(board1, board2):
 
 def alpha_beta(board, depth, alpha, beta, row, column, maximizingPlayer):
     if depth == 0 or isTerminal(board):
-        return score(board), row, column
+        return score(board,depth), row, column
     if maximizingPlayer == 2:
         value = float('-inf')
         for child in possibleMoves(board, maximizingPlayer):
@@ -124,7 +124,7 @@ if __name__ == '__main__':
                     break
             board[tokenRow][tokenColumn] = 1
         else:
-            _, moveRow, moveColumn = alpha_beta(board, width * width, float('-inf'), float('inf'), 0, 0, 2)
+            _, moveRow, moveColumn = alpha_beta(board, 10, float('-inf'), float('inf'), 0, 0, 2)
             board[moveRow][moveColumn] = 2
         humanPlaying = not humanPlaying
         printBoard(board)
